@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft アドオンパック エディター</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #1c1e21; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 2rem 0; }
+        .container { background-color: #ffffff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); width: 100%; max-width: 700px; }
+        h1, h2, h3 { text-align: center; color: #1877f2; }
+        h2 { font-size: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid #1877f2; padding-bottom: 0.5rem; }
+        h3 { font-size: 1.1rem; color: #606770; margin-top: 1.5rem; margin-bottom: 1rem; background-color: #f0f2f5; padding: 0.5rem; border-radius: 4px; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 0.75rem; border: 1px solid #dddfe2; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        input[type="file"] { display: none; }
+        .file-label { background-color: #e7f3ff; border: 1px dashed #1877f2; color: #1877f2; padding: 0.75rem; text-align: center; cursor: pointer; border-radius: 6px; display: block; }
+        button { width: 100%; padding: 0.8rem; color: white; border: none; border-radius: 6px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin-top: 1rem; }
+        #add_item_btn { background-color: #42b72a; }
+        #generate_pack_btn { background-color: #1877f2; }
+        #preview_container { text-align: center; margin-top: 0.5rem; padding: 0.5rem; border: 1px dashed #dddfe2; border-radius: 6px; min-height: 50px; display: flex; justify-content: center; align-items: center; }
+        #preview { max-width: 64px; max-height: 64px; image-rendering: pixelated; }
+        .type-fields, #recipe_container, .weapon-effect-fields { display: none; border-left: 3px solid #1877f2; padding-left: 1rem; margin-top: 1rem; }
+        .type-fields.active, #recipe_container.active, .weapon-effect-fields.active { display: block; }
+        hr { border: 1px solid #f0f2f5; margin: 2rem 0; }
+        #pack_contents ul { list-style-type: none; padding: 0; }
+        #pack_contents li { background-color: #f0f2f5; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background-color 0.2s; }
+        #pack_contents li:hover { background-color: #e0e2e5; }
+        #pack_contents .remove-btn { background: #fa3e3e; color: white; border: none; border-radius: 4px; padding: 0.3rem 0.6rem; cursor: pointer; flex-shrink: 0; margin-left: 1rem; }
+        #recipe_grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-width: 300px; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minecraft アドオンパック エディター</h1>
+        <label for="load_mcaddon_input" class="file-label">.mcaddon を読み込んで編集</label>
+        <input type="file" id="load_mcaddon_input" accept=".mcaddon">
+        <hr>
+        <h2>1. パック全体の設定</h2>
+        <div class="form-group"><label for="addon_name">アドオンの表示名</label><input type="text" id="addon_name" value="すごいアイテムパック"></div>
+        <div class="form-group"><label for="namespace">ID名前空間</label><input type="text" id="namespace" value="custom" pattern="[a-z0-9_]+"></div>
+        <hr>
+        <h2>2. アイテムの作成・編集</h2>
+        <div class="form-group"><label for="item_type">アイテムの種類</label><select id="item_type"><option value="weapon">武器</option><option value="food">食べ物</option><option value="enchant_item">エンチャント（付与アイテム）</option></select></div>
+        <div class="form-group"><label for="item_id">アイテムID</label><input type="text" id="item_id" placeholder="例: ruby_sword"></div>
+        <div class="form-group"><label for="item_name">アイテムの表示名</label><input type="text" id="item_name" placeholder="例: ルビーの剣"></div>
+        <div class="form-group"><label for="texture_file">テクスチャ画像 (16x16推奨)</label><label for="texture_file" class="file-label">画像を選択</label><input type="file" id="texture_file" accept="image/png"><div id="preview_container"><img id="preview" src="" alt="プレビュー"></div></div>
+        
+        <div id="weapon_fields" class="type-fields">
+            <h3>武器の設定</h3>
+            <div class="form-group"><label for="damage">攻撃力</label><input type="number" id="damage" value="10"></div>
+            <div class="form-group"><label for="durability">耐久値</label><input type="number" id="durability" value="500"></div>
+            <div class="form-group"><label for="weapon_effect_type">特殊効果の種類 (右クリックで使用)</label><select id="weapon_effect_type"><option value="none">効果なし</option><option value="projectile">弾を発射</option><option value="self_buff">自己強化</option><option value="aoe">範囲効果</option></select></div>
+            <div id="projectile_fields" class="weapon-effect-fields"><div class="form-group"><label for="projectile_entity">弾の種類</label><select id="projectile_entity"><option value="arrow">矢</option><option value="snowball">雪玉</option><option value="fireball">火の玉</option></select></div></div>
+            <div id="self_buff_fields" class="weapon-effect-fields"><div class="form-group"><label for="self_buff_effect">効果</label><select id="self_buff_effect"><option value="speed">スピード</option><option value="strength">攻撃力上昇</option><option value="jump_boost">跳躍力上昇</option><option value="regeneration">回復</option></select></div><div class="form-group"><label for="self_buff_duration">効果時間(秒)</label><input type="number" id="self_buff_duration" value="10"></div></div>
+            <div id="aoe_fields" class="weapon-effect-fields"><div class="form-group"><label for="aoe_effect">効果</label><select id="aoe_effect"><option value="area_effect_cloud" data-name="healing">回復</option><option value="area_effect_cloud" data-name="poison">毒</option><option value="area_effect_cloud" data-name="wither">ウィザー</option></select></div><div class="form-group"><label for="aoe_radius">効果範囲(半径ブロック)</label><input type="number" id="aoe_radius" value="3"></div></div>
+        </div>
+        <div id="food_fields" class="type-fields"><div class="form-group"><label for="nutrition">満腹度回復量</label><input type="number" id="nutrition" value="4"></div></div>
+        <div id="enchant_item_fields" class="type-fields"><div class="form-group"><label for="effect_name">効果</label><select id="effect_name"><option value="speed">スピード</option></select></div></div>
+        
+        <div class="form-group"><label><input type="checkbox" id="add_recipe_check"> クラフトレシピ</label></div>
+        <div id="recipe_container"><div class="form-group"><label for="recipe_yield">生成数</label><input type="number" id="recipe_yield" value="1" min="1"></div><label>レシピ</label><div id="recipe_grid"> <input type="text" id="recipe_0"><input type="text" id="recipe_1"><input type="text" id="recipe_2"><input type="text" id="recipe_3"><input type="text" id="recipe_4"><input type="text" id="recipe_5"><input type="text" id="recipe_6"><input type="text" id="recipe_7"><input type="text" id="recipe_8"></div></div>
+        
+        <button id="add_item_btn">+ パックに追加</button>
+        <hr>
+        <h2>3. パック内容</h2>
+        <div id="pack_contents"><ul id="pack_contents_list"></ul></div>
+        <button id="generate_pack_btn">アドオンパック (.mcaddon) を生成</button>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let packItems = [];
+        let textureFileContent = null;
+        let currentlyEditingIndex = null;
+
+        const ui = {
+            itemTypeSelect: document.getElementById('item_type'),
+            typeFields: { weapon: document.getElementById('weapon_fields'), food: document.getElementById('food_fields'), enchant_item: document.getElementById('enchant_item_fields') },
+            weaponEffectType: document.getElementById('weapon_effect_type'),
+            weaponEffectFields: { projectile: document.getElementById('projectile_fields'), self_buff: document.getElementById('self_buff_fields'), aoe: document.getElementById('aoe_fields') },
+            addRecipeCheck: document.getElementById('add_recipe_check'),
+            recipeContainer: document.getElementById('recipe_container'),
+            packContentsList: document.getElementById('pack_contents_list'),
+            textureInput: document.getElementById('texture_file'),
+            previewImg: document.getElementById('preview'),
+            loadMcaddonInput: document.getElementById('load_mcaddon_input'),
+            addItemBtn: document.getElementById('add_item_btn'),
+            generatePackBtn: document.getElementById('generate_pack_btn'),
+            itemIdInput: document.getElementById('item_id')
+        };
+
+        function generateUUID() { return crypto.randomUUID(); }
+        function sanitizeName(name) { return name.replace(/[^a-zA-Z0-9_\s\.\-]/g, '_'); }
+
+        function updatePackListView() {
+            ui.packContentsList.innerHTML = "";
+            packItems.forEach((item, index) => {
+                let details = item.hasRecipe ? '[レシピ有り]' : '';
+                if (item.type === 'weapon' && item.weaponEffect && item.weaponEffect !== 'none') { details += ' [特殊効果有り]'; }
+                const li = document.createElement("li");
+                li.dataset.index = index;
+                li.innerHTML = `<span><div class="item-name">${item.itemName}</div><div class="item-type">(${item.itemId}) ${details}</div></span><button class="remove-btn" data-index="${index}">削除</button>`;
+                ui.packContentsList.appendChild(li);
+            });
+        }
+
+        function clearForm() {
+            currentlyEditingIndex = null;
+            ui.addItemBtn.textContent = "+ パックに追加";
+            ui.addItemBtn.style.backgroundColor = '#42b72a';
+            ui.itemIdInput.disabled = false;
+            const fieldsToClear = ['item_id', 'item_name', 'texture_file'];
+            fieldsToClear.forEach(id => document.getElementById(id).value = "");
+            ui.previewImg.src = "";
+            ui.addRecipeCheck.checked = false;
+            ui.recipeContainer.classList.remove('active');
+            for(let i=0; i<9; i++) document.getElementById(`recipe_${i}`).value = "";
+            textureFileContent = null;
+        }
+
+        function loadItemIntoForm(itemIndex) { /* ... Logic to load item into form ... */ }
+
+        // --- Event Listeners ---
+        ui.itemTypeSelect.addEventListener('change', () => { 
+            Object.values(ui.typeFields).forEach(f => f.classList.remove('active'));
+            ui.typeFields[ui.itemTypeSelect.value].classList.add('active');
+        });
+        ui.weaponEffectType.addEventListener('change', () => {
+            Object.values(ui.weaponEffectFields).forEach(f => f.classList.remove('active'));
+            if(ui.weaponEffectType.value !== 'none') {
+                ui.weaponEffectFields[ui.weaponEffectType.value].classList.add('active');
+            }
+        });
+        ui.addRecipeCheck.addEventListener('change', () => { ui.recipeContainer.classList.toggle('active', ui.addRecipeCheck.checked); });
+        ui.textureInput.addEventListener('change', function(e) { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = (e) => { ui.previewImg.src = e.target.result; textureFileContent = e.target.result.split(',')[1]; }; r.readAsDataURL(f); } else { textureFileContent = null; ui.previewImg.src = ""; } });
+        ui.packContentsList.addEventListener('click', (e) => { if (e.target.classList.contains('remove-btn')) { packItems.splice(parseInt(e.target.dataset.index, 10), 1); updatePackListView(); clearForm(); } else { const li = e.target.closest('li'); if(li) loadItemIntoForm(parseInt(li.dataset.index, 10)); } });
+
+        ui.addItemBtn.addEventListener('click', () => {
+            const itemData = { type: ui.itemTypeSelect.value, itemId: document.getElementById('item_id').value, itemName: document.getElementById('item_name').value, textureContent: textureFileContent, hasRecipe: ui.addRecipeCheck.checked };
+            if (!itemData.itemId || !itemData.itemName) { alert("アイテムIDと表示名は必須です。"); return; }
+
+            if (itemData.type === 'weapon') {
+                itemData.damage = parseInt(document.getElementById('damage').value, 10);
+                itemData.durability = parseInt(document.getElementById('durability').value, 10);
+                itemData.weaponEffect = ui.weaponEffectType.value;
+                if (itemData.weaponEffect === 'projectile') {
+                    itemData.projectileEntity = document.getElementById('projectile_entity').value;
+                } else if (itemData.weaponEffect === 'self_buff') {
+                    itemData.selfBuffEffect = document.getElementById('self_buff_effect').value;
+                    itemData.selfBuffDuration = parseInt(document.getElementById('self_buff_duration').value, 10);
+                } else if (itemData.weaponEffect === 'aoe') {
+                    const aoeEffectSelect = document.getElementById('aoe_effect');
+                    itemData.aoeEntity = aoeEffectSelect.value;
+                    itemData.aoeEffectName = aoeEffectSelect.options[aoeEffectSelect.selectedIndex].dataset.name;
+                    itemData.aoeRadius = parseInt(document.getElementById('aoe_radius').value, 10);
+                }
+            }
+            // ... (other type data collection) ...
+
+            if (currentlyEditingIndex !== null) { packItems[currentlyEditingIndex] = itemData; } 
+            else { packItems.push(itemData); }
+            updatePackListView();
+            clearForm();
+        });
+
+        ui.generatePackBtn.addEventListener('click', () => { /* ... Generation Logic ... */ });
+        ui.loadMcaddonInput.addEventListener('change', async (event) => { /* ... Loading Logic ... */ });
+
+        // 初期表示の設定
+        ui.typeFields.weapon.classList.add('active');
+    });
+    </script>
+</body>
+</html>
