@@ -3,22 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Add-on Studio (Vivid Theme)</title>
+    <title>Ultimate Add-on Studio (Download Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* --- New Vivid Color Palette --- */
         :root {
-            --bg-primary: #2a273f; /* Deep purple for cards */
-            --bg-secondary: #252338; /* Darker purple for main background */
-            --bg-tertiary: #3e3a59; /* Lighter purple for inputs/hovers */
-            --text-primary: #ffffff; /* Bright white */
-            --text-secondary: #b0a9df; /* Light lavender for labels */
-            --accent: #ff79c6; /* Vibrant Pink */
-            --accent-hover: #ff92d0; /* Lighter pink for hover */
-            --danger: #ff5555; /* Bright Red */
+            --bg-primary: #2a273f; --bg-secondary: #252338; --bg-tertiary: #3e3a59;
+            --text-primary: #ffffff; --text-secondary: #b0a9df;
+            --accent: #ff79c6; --accent-hover: #ff92d0; --danger: #ff5555;
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-secondary); color: var(--text-primary); }
         .card { background-color: var(--bg-primary); border: 1px solid var(--bg-tertiary); border-radius: 12px; padding: 24px; }
@@ -47,7 +41,7 @@
     <input type="file" id="import-input" class="hidden" accept=".mcaddon,.zip" onchange="handleImport(event)">
 
     <div class="flex h-screen bg-bg-secondary">
-        <!-- 左ペイン: アイテムリスト -->
+        <!-- Left Pane: Item List -->
         <aside class="w-1/4 bg-bg-primary p-4 flex flex-col min-w-[300px]">
             <h2 class="text-2xl font-bold mb-4 border-b border-bg-tertiary pb-2">プロジェクト</h2>
             <div class="flex gap-2 mb-4">
@@ -61,7 +55,7 @@
             <div class="mt-8 border-t border-bg-tertiary pt-4"><button id="generateBtn" class="btn btn-primary w-full text-lg py-3 justify-center" onclick="generateAddon()"><i class="fas fa-download"></i>アドオンを生成</button><p id="message-area" class="text-accent mt-2 text-center font-semibold"></p></div>
         </aside>
 
-        <!-- 右ペイン: エディタ -->
+        <!-- Right Pane: Editor -->
         <main id="editor" class="w-3/4 p-8 overflow-y-auto">
             <div id="welcomeScreen" class="text-center h-full flex flex-col justify-center items-center">
                 <i class="fas fa-magic-wand-sparkles text-6xl text-accent mb-4"></i>
@@ -75,16 +69,14 @@
     </div>
 
     <script>
-        // The JavaScript logic remains the same as the previous version.
-        // It's omitted here for brevity but is identical to the fully functional editor script.
-        // --- データ管理 ---
+        // --- Data Management & Constants (unchanged) ---
         let items = [];
         let selectedItemId = null;
         const messageArea = document.getElementById('message-area');
         const TOOL_TYPES = ['sword', 'pickaxe', 'axe', 'shovel', 'hoe'];
         const ARMOR_TYPES = ['helmet', 'chestplate', 'leggings', 'boots'];
 
-        // --- UI描画ロジック ---
+        // --- UI Rendering Logic (unchanged) ---
         function renderItemList() {
             const list = document.getElementById('itemList');
             list.innerHTML = '';
@@ -100,7 +92,6 @@
                 list.appendChild(div);
             });
         }
-        
         function renderEditor() {
             const item = items.find(i => i.id === selectedItemId);
             const editorContent = document.getElementById('editorContent');
@@ -113,15 +104,12 @@
                 return;
             }
             
-            // HTMLテンプレート
             editorContent.innerHTML = `
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold">${item.itemName || '新規アイテム'}</h2>
                     <button class="btn btn-primary" onclick="saveCurrentItem()"><i class="fas fa-save"></i>変更を保存</button>
                 </div>
-
                 <div class="space-y-8">
-                    <!-- 基本情報 -->
                     <div class="card grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div class="md:col-span-2 space-y-6">
                             <div><label class="label">名前</label><input type="text" class="input-field" data-key="itemName" value="${item.itemName || ''}"></div>
@@ -135,21 +123,15 @@
                             <button class="btn btn-primary w-full justify-center" onclick="this.previousElementSibling.click()">画像を選択</button>
                         </div>
                     </div>
-
-                    <!-- 動的セクション -->
                     ${getDynamicSections(item)}
-                    
-                    <!-- レシピセクション -->
                     ${getRecipeSection(item)}
                 </div>
             `;
             
-            // 後処理
             editorContent.querySelector('[data-key="itemType"]').onchange = () => { saveCurrentItem(); renderEditor(); };
             editorContent.querySelector('.item-texture-input').onchange = (e) => handleTextureUpload(e, item.id);
         }
-
-        function getItemTypeOptions(selectedType) {
+        function getItemTypeOptions(selectedType) { /* ...unchanged... */
             const types = { 'アイテム': ['generic', 'food'], 'ツール': ['sword', 'pickaxe', 'axe', 'shovel', 'hoe'], '防具': ['helmet', 'chestplate', 'leggings', 'boots'], 'ブロック': ['block'] };
             let html = '';
             for (const group in types) {
@@ -161,110 +143,120 @@
             }
             return html;
         }
-
-        function getDynamicSections(item) {
+        function getDynamicSections(item) { /* ...unchanged... */
             let html = '';
             const isTool = TOOL_TYPES.includes(item.itemType);
             const isArmor = ARMOR_TYPES.includes(item.itemType);
             const isBlock = item.itemType === 'block';
 
             html += `<div class="card"><h3 class="section-title">共通設定</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="label">最大スタック数</label><input type="number" class="input-field" data-key="maxStackSize" value="${item.maxStackSize || 64}"></div><div class="flex items-center mt-6"><input type="checkbox" data-key="foil" class="w-5 h-5 accent-accent" ${item.foil ? 'checked' : ''}><label class="label ml-2 !mb-0">エンチャントの輝き</label></div></div></div>`;
-            
-            if (isTool || isArmor) {
-                 html += `<div class="card"><h3 class="section-title">装備設定</h3><div><label class="label">耐久値</label><input type="number" class="input-field" data-key="durability" value="${item.durability || 100}"></div></div>`;
-            }
-            if (isTool) {
-                 html += `<div class="card"><h3 class="section-title">ツール設定</h3>${item.itemType === 'sword' ? `<div><label class="label">攻撃力</label><input type="number" class="input-field" data-key="damage" value="${item.damage || 1}"></div>` : `<div><label class="label">破壊速度</label><input type="number" class="input-field" data-key="speed" value="${item.speed || 1}"></div>`}</div>`;
-            }
-            if (isArmor) {
-                 html += `<div class="card"><h3 class="section-title">防具設定</h3><div><label class="label">防御力</label><input type="number" class="input-field" data-key="protection" value="${item.protection || 1}"></div></div>`;
-            }
-            if (isBlock) {
-                 html += `<div class="card"><h3 class="section-title">ブロック設定</h3><div class="grid grid-cols-2 gap-6"><div><label class="label">硬さ (破壊時間)</label><input type="number" class="input-field" data-key="destroyTime" value="${item.destroyTime || 1.0}"></div><div><label class="label">爆発耐性</label><input type="number" class="input-field" data-key="explosionResistance" value="${item.explosionResistance || 1.0}"></div></div></div>`;
-            }
+            if (isTool || isArmor) { html += `<div class="card"><h3 class="section-title">装備設定</h3><div><label class="label">耐久値</label><input type="number" class="input-field" data-key="durability" value="${item.durability || 100}"></div></div>`; }
+            if (isTool) { html += `<div class="card"><h3 class="section-title">ツール設定</h3>${item.itemType === 'sword' ? `<div><label class="label">攻撃力</label><input type="number" class="input-field" data-key="damage" value="${item.damage || 1}"></div>` : `<div><label class="label">破壊速度</label><input type="number" class="input-field" data-key="speed" value="${item.speed || 1}"></div>`}</div>`; }
+            if (isArmor) { html += `<div class="card"><h3 class="section-title">防具設定</h3><div><label class="label">防御力</label><input type="number" class="input-field" data-key="protection" value="${item.protection || 1}"></div></div>`; }
+            if (isBlock) { html += `<div class="card"><h3 class="section-title">ブロック設定</h3><div class="grid grid-cols-2 gap-6"><div><label class="label">硬さ (破壊時間)</label><input type="number" class="input-field" data-key="destroyTime" value="${item.destroyTime || 1.0}"></div><div><label class="label">爆発耐性</label><input type="number" class="input-field" data-key="explosionResistance" value="${item.explosionResistance || 1.0}"></div></div></div>`; }
             return html;
         }
-
-        function getRecipeSection(item) {
+        function getRecipeSection(item) { /* ...unchanged... */ 
             const recipe = item.recipe || { type: 'none', pattern: ['','',''], keys: {}, result_count: 1 };
-            const patternHTML = recipe.pattern.map((row, rowIndex) => 
-                row.padEnd(3, ' ').split('').map((key, colIndex) => 
-                    `<input type="text" class="input-field crafting-key" data-row="${rowIndex}" data-col="${colIndex}" value="${key.trim()}">`
-                ).join('')
-            ).join('');
+            const patternHTML = recipe.pattern.map((row, rowIndex) => row.padEnd(3, ' ').split('').map((key, colIndex) => `<input type="text" class="input-field crafting-key" data-row="${rowIndex}" data-col="${colIndex}" value="${key.trim()}">`).join('')).join('');
+            return `<div class="card"><h3 class="section-title">クラフトレシピ (定形)</h3><div class="flex items-center gap-8"><div><label class="label">パターン (1文字のキー)</label><div class="crafting-grid">${patternHTML}</div></div><div><label class="label">キーとアイテムID</label><div id="recipe-keys" class="space-y-2"></div></div><div><label class="label">作成個数</label><input type="number" class="input-field" data-key="recipeResultCount" value="${recipe.result_count || 1}"></div></div></div>`;
+        }
 
-            return `
-                <div class="card">
-                    <h3 class="section-title">クラフトレシピ (定形)</h3>
-                    <div class="flex items-center gap-8">
-                        <div>
-                            <label class="label">パターン (1文字のキー)</label>
-                            <div class="crafting-grid">${patternHTML}</div>
-                        </div>
-                        <div>
-                             <label class="label">キーとアイテムID</label>
-                             <div id="recipe-keys" class="space-y-2"></div>
-                        </div>
-                         <div>
-                            <label class="label">作成個数</label>
-                            <input type="number" class="input-field" data-key="recipeResultCount" value="${recipe.result_count || 1}">
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // --- イベントハンドラ ---
-        function addNewItem() {
-            const newItem = { id: `item_${Date.now()}`, itemName: `新規アイテム${items.length + 1}`, itemId: `myaddon:item${items.length + 1}`, itemType: 'generic' };
-            items.push(newItem);
-            selectItem(newItem.id);
-        }
+        // --- Event Handlers (unchanged) ---
+        function addNewItem() { const newItem = { id: `item_${Date.now()}`, itemName: `新規アイテム${items.length + 1}`, itemId: `myaddon:item${items.length + 1}`, itemType: 'generic' }; items.push(newItem); selectItem(newItem.id); }
         function selectItem(id) { saveCurrentItem(); selectedItemId = id; renderItemList(); renderEditor(); }
         function deleteItem(id) { items = items.filter(item => item.id !== id); if (selectedItemId === id) { selectedItemId = null; } renderItemList(); renderEditor(); }
+        function saveCurrentItem() { if (!selectedItemId) return; const item = items.find(i => i.id === selectedItemId); if (!item) return; const editor = document.getElementById('editorContent'); if (!editor.innerHTML) return; editor.querySelectorAll('[data-key]').forEach(input => { const key = input.dataset.key; const value = input.type === 'checkbox' ? input.checked : (input.type === 'number' ? parseFloat(input.value) : input.value); item[key] = value; }); const listItem = document.querySelector(`#itemList .item.active .font-semibold`); if(listItem) listItem.textContent = item.itemName; }
+        function handleTextureUpload(event, itemId) { const file = event.target.files[0]; if (!file) return; const item = items.find(i => i.id === itemId); if (!item) return; item.textureFile = file; const reader = new FileReader(); reader.onload = (e) => { item.textureDataURL = e.target.result; renderItemList(); renderEditor(); }; reader.readAsDataURL(file); }
+        async function handleImport(event) { /* ...unchanged... */ }
 
-        function saveCurrentItem() {
-            if (!selectedItemId) return;
-            const item = items.find(i => i.id === selectedItemId);
-            if (!item) return;
-            const editor = document.getElementById('editorContent');
-            if (!editor.innerHTML) return;
-
-            editor.querySelectorAll('[data-key]').forEach(input => {
-                const key = input.dataset.key;
-                const value = input.type === 'checkbox' ? input.checked : (input.type === 'number' ? parseFloat(input.value) : input.value);
-                item[key] = value;
-            });
-            const listItem = document.querySelector(`#itemList .item.active .font-semibold`);
-            if(listItem) listItem.textContent = item.itemName;
-        }
-        
-        function handleTextureUpload(event, itemId) {
-            const file = event.target.files[0]; if (!file) return;
-            const item = items.find(i => i.id === itemId); if (!item) return;
-            item.textureFile = file;
-            const reader = new FileReader();
-            reader.onload = (e) => { item.textureDataURL = e.target.result; renderItemList(); renderEditor(); };
-            reader.readAsDataURL(file);
-        }
-        
-        async function handleImport(event) {
-            // ... (Import logic is unchanged) ...
-        }
-        
+        // --- ★★★ DOWNLOAD LOGIC: FIXED ★★★ ---
         async function generateAddon() {
-            // ... (Generation logic is unchanged) ...
-             saveCurrentItem();
+            saveCurrentItem();
             const addonName = document.getElementById('addonName').value.trim();
             const addonDesc = document.getElementById('addonDesc').value.trim();
-            messageArea.textContent = 'Generating...';
+            messageArea.textContent = '';
 
-            // ... Full generation logic from previous step ...
+            if (!addonName || !addonDesc || items.length === 0) {
+                messageArea.textContent = '情報不足: アドオン名、説明、1つ以上のアイテムが必要です。';
+                return;
+            }
 
-            messageArea.textContent = 'Add-on generated successfully!';
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>生成中...';
+
+            try {
+                const zip = new JSZip();
+                const bp = zip.folder("behavior_pack");
+                const rp = zip.folder("resource_pack");
+                
+                const bp_uuid = `b${crypto.randomUUID()}`;
+                const rp_uuid = `r${crypto.randomUUID()}`;
+
+                // --- Behavior Pack Manifest ---
+                const bp_manifest = { format_version: 2, header: { name: `${addonName} (BP)`, description: addonDesc, uuid: bp_uuid, version: [1, 0, 0], min_engine_version: [1, 16, 0] }, modules: [{ type: "data", uuid: `d${crypto.randomUUID()}`, version: [1, 0, 0] }], dependencies: [{ uuid: rp_uuid, version: [1, 0, 0] }] };
+                bp.file("manifest.json", JSON.stringify(bp_manifest, null, 2));
+
+                // --- Resource Pack Manifest ---
+                const rp_manifest = { format_version: 2, header: { name: `${addonName} (RP)`, description: addonDesc, uuid: rp_uuid, version: [1, 0, 0], min_engine_version: [1, 16, 0] }, modules: [{ type: "resources", uuid: `s${crypto.randomUUID()}`, version: [1, 0, 0] }] };
+                rp.file("manifest.json", JSON.stringify(rp_manifest, null, 2));
+
+                const itemTextureJson = { resource_pack_name: "vanilla", texture_name: "atlas.items", texture_data: {} };
+                let langContent = "";
+
+                for (const item of items) {
+                    const itemIdentifier = item.itemId.split(':')[1];
+                    const itemJson = { "format_version": "1.16.100", "minecraft:item": { "description": { "identifier": item.itemId, "category": (TOOL_TYPES.includes(item.itemType) || ARMOR_TYPES.includes(item.itemType)) ? "equipment" : "items" }, "components": {} } };
+                    const components = itemJson["minecraft:item"].components;
+                    
+                    components["minecraft:display_name"] = { "value": item.itemName };
+                    components["minecraft:max_stack_size"] = item.maxStackSize || 64;
+                    if(item.foil) components["minecraft:foil"] = true;
+                    if(item.textureFile) components["minecraft:icon"] = { "texture": itemIdentifier };
+
+                    bp.file(`items/${itemIdentifier}.json`, JSON.stringify(itemJson, null, 2));
+                    
+                    if(item.textureFile) {
+                        rp.file(`textures/items/${itemIdentifier}.png`, item.textureFile);
+                        itemTextureJson.texture_data[itemIdentifier] = { textures: `textures/items/${itemIdentifier}` };
+                    }
+                    langContent += `item.${item.itemId}.name=${item.itemName}\n`;
+                }
+                
+                rp.file("textures/item_texture.json", JSON.stringify(itemTextureJson, null, 2));
+                rp.file("texts/en_US.lang", langContent);
+                rp.file("texts/ja_JP.lang", langContent);
+
+                // --- Await for the zip generation to complete ---
+                const content = await zip.generateAsync({ type:"blob" });
+                
+                // --- Create and trigger download link ---
+                const a = document.createElement('a');
+                const url = URL.createObjectURL(content);
+                a.href = url;
+                a.download = `${addonName.replace(/\s/g, '_')}.mcaddon`;
+                document.body.appendChild(a);
+                
+                a.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+
+                messageArea.textContent = 'アドオンが正常に生成されました！';
+
+            } catch (error) {
+                console.error("Generation failed:", error);
+                messageArea.textContent = `エラーが発生しました: ${error.message}`;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="fas fa-download"></i>アドオンを生成';
+            }
         }
 
-        // 初期化
+        // --- Initialization ---
         renderItemList();
     </script>
 </body>
